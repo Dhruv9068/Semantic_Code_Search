@@ -206,9 +206,6 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 Please make sure your code follows the project's coding style and includes appropriate tests.
 
-## 📝 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## 🙏 Acknowledgements
 

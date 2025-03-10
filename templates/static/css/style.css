@@ -1,0 +1,321 @@
+/* Base styles */
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Dark theme */
+.dark {
+    --bg-primary: #111827;   /* gray-900 */
+    --bg-secondary: #1F2937; /* gray-800 */
+    --bg-tertiary: #374151;  /* gray-700 */
+    --bg-quaternary: #4B5563; /* gray-600 */
+    
+    --text-primary: #F9FAFB;   /* gray-50 */
+    --text-secondary: #E5E7EB; /* gray-200 */
+    --text-tertiary: #9CA3AF;  /* gray-400 */
+    --text-muted: #6B7280;     /* gray-500 */
+    
+    --accent-primary: #3B82F6; /* blue-500 */
+    --accent-secondary: #2563EB; /* blue-600 */
+    --accent-tertiary: #1D4ED8; /* blue-700 */
+    
+    --success: #10B981; /* green-500 */
+    --warning: #F59E0B; /* amber-500 */
+    --error: #EF4444;   /* red-500 */
+    --info: #3B82F6;    /* blue-500 */
+}
+
+/* Navigation styles */
+.nav-link {
+    @apply px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white transition-colors;
+}
+
+.nav-link.active {
+    @apply bg-gray-700 text-white;
+}
+
+/* Loading spinner */
+.loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(59, 130, 246, 0.3);
+    border-radius: 50%;
+    border-top-color: #3B82F6;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Code preview */
+.code-preview {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+/* Code formatting */
+pre {
+    margin: 0;
+    padding: 0.75rem;
+    overflow-x: auto;
+}
+
+code {
+    font-family: 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+/* Syntax highlighting colors for dark theme */
+.hljs-keyword {
+    color: #FF79C6;
+}
+
+.hljs-string {
+    color: #F1FA8C;
+}
+
+.hljs-number, .hljs-literal {
+    color: #BD93F9;
+}
+
+.hljs-function, .hljs-title {
+    color: #50FA7B;
+}
+
+.hljs-comment {
+    color: #6272A4;
+}
+
+.hljs-variable, .hljs-attr {
+    color: #8BE9FD;
+}
+
+/* Toast animation */
+#toast {
+    animation: toast-in-out 3s ease-in-out;
+}
+
+@keyframes toast-in-out {
+    0% {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    10% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    90% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--bg-quaternary);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
+/* Form controls */
+input[type="text"],
+input[type="number"],
+select,
+textarea {
+    background-color: var(--bg-tertiary);
+    color: var(--text-secondary);
+    border-color: var(--bg-quaternary);
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+select:focus,
+textarea:focus {
+    border-color: var(--accent-primary);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+/* Range slider styling */
+input[type="range"] {
+    -webkit-appearance: none;
+    height: 0.5rem;
+    background: var(--bg-tertiary);
+    border-radius: 0.25rem;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 1rem;
+    height: 1rem;
+    background: var(--accent-primary);
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+input[type="range"]:focus {
+    outline: none;
+}
+
+input[type="range"]:focus::-webkit-slider-thumb {
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+/* Checkbox styling */
+input[type="checkbox"] {
+    -webkit-appearance: none;
+    width: 1rem;
+    height: 1rem;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--bg-quaternary);
+    border-radius: 0.25rem;
+    cursor: pointer;
+    position: relative;
+}
+
+input[type="checkbox"]:checked {
+    background-color: var(--accent-primary);
+    border-color: var(--accent-primary);
+}
+
+input[type="checkbox"]:checked::after {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 2px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+input[type="checkbox"]:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+/* Button transitions */
+button {
+    transition: all 0.2s ease-in-out;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .code-preview {
+        max-height: 150px;
+    }
+    
+    .nav-link {
+        @apply px-2 py-1;
+    }
+}
+
+/* Source code styling */
+.source {
+    background-color: var(--bg-tertiary);
+    border-radius: 0.25rem;
+    overflow-x: auto;
+}
+
+.source .linenos {
+    background-color: var(--bg-secondary);
+    color: var(--text-muted);
+    padding: 0 0.5rem;
+    border-right: 1px solid var(--bg-quaternary);
+    text-align: right;
+    user-select: none;
+}
+
+.source .code {
+    padding: 0 0.5rem;
+}
+
+.highlight-line {
+    background-color: rgba(59, 130, 246, 0.1);
+}
+
+/* Visualization styles */
+#visualizationContent {
+    min-height: 400px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Chart styling */
+.chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.chart-legend-item {
+    display: flex;
+    align-items: center;
+    font-size: 0.875rem;
+}
+
+.chart-legend-color {
+    width: 1rem;
+    height: 1rem;
+    border-radius: 0.25rem;
+    margin-right: 0.25rem;
+}
+
+/* Modal animation */
+#codeModal {
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+#codeModal:not(.hidden) {
+    opacity: 1;
+}
+
+/* Settings panel styles */
+.settings-group {
+    margin-bottom: 1.5rem;
+}
+
+.settings-label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+}
+
+/* Chart tooltip styling */
+.chart-tooltip {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--bg-quaternary);
+    border-radius: 0.25rem;
+    padding: 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    z-index: 10;
+}

@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Semantic Code Search Engine</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/monokai-sublime.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <style>
+        :root {
+            --bg-primary: #121212;
+            --bg-secondary: #1e1e1e;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --accent-primary: #3d5afe;
+            --accent-secondary: #536dfe;
+            --border-color: #333333;
+            --success-color: #4caf50;
+            --error-color: #f44336;
+            --warning-color: #ff9800;
+        }
+        
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .container {
+            max-width: 1400px;
+        }
+        
+        .card {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+        }
+        
+        .btn-primary {
+            background-color: var(--accent-primary);
+            border-color: var(--accent-primary);
+            color: white;
+            transition: all 0.3s ease-in-out;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--accent-secondary);
+            border-color: var(--accent-secondary);
+            transform: translateY(-2px);
+        }
+        
+        .form-control {
+            background-color: var(--bg-primary);
+            border-color: var(--border-color);
+            color: var(--text-primary);
+            transition: border-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+        }
+        
+        .form-control:focus {
+            background-color: var(--bg-primary);
+            border-color: var(--accent-primary);
+            color: var(--text-primary);
+            box-shadow: 0 0 0 0.2rem rgba(61, 90, 254, 0.25);
+        }
+        
+        .source {
+            background-color: var(--bg-secondary);
+            border-radius: 4px;
+            overflow-x: auto;
+            margin-bottom: 1rem;
+        }
+        
+        .source .linenos {
+            background-color: #2a2a2a;
+            color: #666;
+            padding: 0 8px;
+            border-right: 1px solid #444;
+            text-align: right;
+            user-select: none;
+        }
+        
+        .source .code {
+            padding: 0 8px;
+        }
+        
+        .highlight-line {
+            background-color: rgba(255, 255, 0, 0.1);
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .badge {
+            padding: 0.35em 0.65em;
+            font-size: 0.75em;
+            font-weight: 700;
+            border-radius: 0.25rem;
+            transition: all 0.3s ease-in-out;
+        }
+        
+        .badge:hover {
+            transform: scale(1.1);
+        }
+        
+        .badge-primary {
+            background-color: var(--accent-primary);
+            color: white;
+        }
+        
+        .badge-secondary {
+            background-color: #616161;
+            color: white;
+        }
+        
+        .badge-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+        
+        .badge-warning {
+            background-color: var(--warning-color);
+            color: black;
+        }
+        
+        .badge-error {
+            background-color: var(--error-color);
+            color: white;
+        }
+        
+        .alert {
+            border-radius: 4px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease-in-out;
+        }
+        
+        .alert:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .alert-success {
+            background-color: rgba(76, 175, 80, 0.1);
+            border: 1px solid rgba(76, 175, 80, 0.2);
+            color: #81c784;
+        }
+        
+        .alert-error {
+            background-color: rgba(244, 67, 54, 0.1);
+            border: 1px solid rgba(244, 67, 54, 0.2);
+            color: #e57373;
+        }
+        
+        .alert-warning {
+            background-color: rgba(255, 152, 0, 0.1);
+            border: 1px solid rgba(255, 152, 0, 0.2);
+            color: #ffb74d;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #777;
+        }
+        
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .slide-in {
+            animation: slideIn 0.3s ease-in-out;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        /* New styles for better UI */
+        .nav-link {
+            color: var(--text-secondary);
+            transition: color 0.3s ease-in-out;
+        }
+        
+        .nav-link:hover, .nav-link.active {
+            color: var(--accent-primary);
+        }
+        
+        .code-preview {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            width: 120px;
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -60px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <header class="mb-8">
+            <h1 class="text-4xl font-bold text-center text-blue-400">Semantic Code Search Engine</h1>
+            <p class="text-center text-gray-400 mt-2">Search your codebase using natural language queries</p>
+            <nav class="mt-4">
+                <ul class="flex justify-center space-x-4">
+                    <li><a href="#index" class="nav-link">Index</a></li>
+                    <li><a href="#search" class="nav-link">Search</a></li>
+                    <li><a href="#stats" class="nav-link">Statistics</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <div id="index" class="bg-gray-800 rounded-lg shadow-md p-6 mb-8 card">
+            <h2 class="text-2xl font-semibold mb-4 text-blue-300">Index Repository</h2>
+            <form id="indexForm" class="space-y-4">
+                <div>
+                    <label for="repoPath" class="block text-sm font-medium text-gray-300">Repository Path</label>
+                    <input type="text" id="repoPath" name="repo_path" class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border form-control" placeholder="/path/to/repository">
+                </div>
+                <div class="flex justify-end">
+                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 btn-primary">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                        Index Repository
+                    </button>
+                </div>
+            </form>
+            <div id="indexStatus" class="mt-4 hidden">
+                <div class="flex items-center">
+                    <div class="loading mr-2"></div>
+                    <p class="text-gray-300">Indexing repository...</p>
+                </div>
+            </div>
+            <div id="indexResult" class="mt-4 hidden"></div>
+        </div>
+
+        <div id="search" class="bg-gray-800 rounded-lg shadow-md p-6 mb-8 card">
+            <h2 class="text-2xl font-semibold mb-4 text-blue-300">Search Code</h2>
+            <form id="searchForm" class="space-y-4">
+                <div>
+                    <label for="query" class="block text-sm font-medium text-gray-300">Search Query</label>
+                    <input type="text" id="query" name="query" class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border form-control" placeholder="Find code that implements a binary search algorithm">
+                </div>
+                <div class="flex flex-wrap gap-4">
+                    <div>
+                        <label for="numResults" class="block text-sm font-medium text-gray-300">Number of Results</label>
+                        <input type="number" id="numResults" name="num_results" class="mt-1 block w-32 rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border form-control" value="1" min="1" max="100">
+                    </div>
+                    <div>
+                        <label for="language" class="block text-sm font-medium text-gray-300">Language Filter</label>
+                        <select id="language" name="language" class="mt-1 block w-40 rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border form-control">
+                            <option value="">All Languages</option>
+                            <option value="python">Python</option>
+                            <option value="javascript">JavaScript</option>
+                            <option value="java">Java</option>
+                            <option value="c">C/C++</option>
+                            <option value="csharp">C#</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="minSimilarity" class="block text-sm font-medium text-gray-300">Min. Similarity</label>
+                        <div class="flex items-center mt-1">
+                            <input type="range" id="minSimilarity" name="min_similarity" class="w-32 bg-gray-700" min="0" max="100" value="50">
+                            <span id="similarityValue" class="ml-2 text-gray-300">50%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-end">
+                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 btn-primary">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        Search
+                    </button>
+                </div>
+            </form>
+            <div id="searchStatus" class="mt-4 hidden">
+                <div class="flex items-center">
+                    <div class="loading mr-2"></div>
+                    <p class="text-gray-300">Searching...</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="resultsContainer" class="bg-gray-800 rounded-lg shadow-md p-6 mb-8 hidden card slide-in">
+            <h2 class="text-2xl font-semibold mb-4 text-blue-300">Search Results</h2>
+            <div id="searchResults" class="space-y-6"></div>
+        </div>
+
+        <div id="stats" class="bg-gray-800 rounded-lg shadow-md p-6 card">
+            <h2 class="text-2xl font-semibold mb-4 text-blue-300">Index Statistics</h2>
+            <div id="statsContainer">
+                <div class="flex items-center">
+                    <div class="loading mr-2"></div>
+                    <p class="text-gray-300">Loading statistics...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize syntax highlighting
+            document.querySelectorAll('pre code').forEach((block) => {
+                hljs.highlightBlock(block);
+            });
+            
+            // Update similarity value display
+            document.getElementById('minSimilarity').addEventListener('input', function() {
+                document.getElementById('similarityValue').textContent = this.value + '%';
+            });
+            
+            // Smooth scrolling for navigation
+            document.querySelectorAll('nav a').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            });
+            
+            // Index form submission
+            const indexForm = document.getElementById('indexForm');
+            const indexStatus = document.getElementById('indexStatus');
+            const indexResult = document.getElementById('indexResult');
+
+            indexForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(indexForm);
+                const repoPath = formData.get('repo_path');
+                
+                if (!repoPath) {
+                    showIndexResult('error', 'Repository path cannot be empty');
+                    return;
+                }
+                
+                indexStatus.classList.remove('hidden');
+                indexResult.classList.add('hidden');
+                
+                fetch('/index', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    indexStatus.classList.add('hidden');
+                    
+                    if (data.error) {
+                        showIndexResult('error', data.error);
+                    } else {
+                        showIndexResult('success', data.message);
+                        loadStats();
+                    }
+                })
+                .catch(error => {
+                    indexStatus.classList.add('hidden');
+                    showIndexResult('error', 'An error occurred while indexing: ' + error.message);
+                });
+            });
+            
+            // Search form submission
+            const searchForm = document.getElementById('searchForm');
+            const searchStatus = document.getElementById('searchStatus');
+            const resultsContainer = document.getElementById('resultsContainer');
+            const searchResults = document.getElementById('searchResults');
+            
+            searchForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(searchForm);
+                const query = formData.get('query');
+                
+                if (!query) {
+                    alert('Search query cannot be empty');
+                    return;
+                }
+                
+                searchStatus.classList.remove('hidden');
+                resultsContainer.classList.add('hidden');
+                
+                fetch('/search', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    searchStatus.classList.add('hidden');
+                    
+                    if (data.error) {
+                        alert(data.error);
+                    } else {
+                        displaySearchResults(data.results);
+                    }
+                })
+                .catch(error => {
+                    searchStatus.classList.add('hidden');
+                    alert('An error occurred while searching: ' + error.message);
+                });
+            });
+            
+            // Load statistics on page load
+            loadStats();
+            
+            // Helper functions
+            function showIndexResult(type, message) {
+                const alertClass = type === 'error' ? 'alert-error' : 'alert-success';
+                const iconPath = type === 'error' 
+                    ? '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />'
+                    : '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />';
+                
+                indexResult.innerHTML = `
+                    <div class="rounded-md ${alertClass} p-4 alert">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <svg class="h-5 w-5 ${type === 'error' ? 'text-red-400' : 'text-green-400'}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                    ${iconPath}
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm font-medium">${message}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                indexResult.classList.remove('hidden');
+                indexResult.classList.add('fade-in');
+            }
+            
+            function displaySearchResults(results) {
+                searchResults.innerHTML = '';
+                
+                if (results.length === 0) {
+                    searchResults.innerHTML = '<p class="text-gray-400">No results found</p>';
+                    resultsContainer.classList.remove('hidden');
+                    return;
+                }
+                
+                results.forEach((result, index) => {
+                    const resultElement = document.createElement('div');
+                    resultElement.className = 'border border-gray-700 rounded-md p-4 fade-in';
+                    
+                    // Format similarity score
+                    const similarityScore = parseFloat(result.similarity) * 100;
+                    const scoreClass = similarityScore > 80 ? 'badge-success' : 
+                                      similarityScore > 60 ? 'badge-primary' : 
+                                      'badge-secondary';
+                    
+                    resultElement.innerHTML = `
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-lg font-medium text-blue-300">${result.file_path}</h3>
+                            <div class="flex space-x-2">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-700 text-gray-300">
+                                    ${result.language}
+                                </span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${scoreClass} badge">
+                                    ${similarityScore.toFixed(0)}% match
+                                </span>
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <span class="text-sm text-gray-400">Lines ${result.line_numbers[0]}-${result.line_numbers[1]}</span>
+                        </div>
+                        <div class="overflow-x-auto border border-gray-700 rounded-md code-preview">
+                            ${result.code}
+                        </div>
+                        <div class="mt-2 flex justify-end">
+                            <button class="copy-btn inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-blue-400 hover:text-blue-300 focus:outline-none" data-code-index="${index}">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                Copy
+                            </button>
+                        </div>
+                    `;
+                    
+                    searchResults.appendChild(resultElement);
+                });
+                
+                // Initialize syntax highlighting for new results
+                setTimeout(() => {
+                    document.querySelectorAll('pre code').forEach((block) => {
+                        hljs.highlightBlock(block);
+                    });
+                }, 0);
+                
+                resultsContainer.classList.remove('hidden');
+                
+                // Add copy functionality
+                document.querySelectorAll('.copy-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const codeIndex = this.getAttribute('data-code-index');
+                        const codeElement = this.closest('.fade-in').querySelector('pre code');
+                        const codeText = codeElement.textContent;
+                        
+                        navigator.clipboard.writeText(codeText).then(() => {
+                            this.innerHTML = `
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                Copied!
+                            `;
+                            setTimeout(() => {
+                                this.innerHTML = `
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                    Copy
+                                `;
+                            }, 2000);
+                        });
+                    });
+                });
+            }
+            
+            function loadStats() {
+                const statsContainer = document.getElementById('statsContainer');
+                
+                fetch('/stats')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        statsContainer.innerHTML = `<p class="text-red-400">${data.error}</p>`;
+                    } else {
+                        displayStats(data);
+                    }
+                })
+                .catch(error => {
+                    statsContainer.innerHTML = `<p class="text-red-400">Error loading statistics: ${error.message}</p>`;
+                });
+            }
+            
+            function displayStats(stats) {
+                const languagesHtml = Object.entries(stats.languages)
+                    .map(([lang, count]) => `
+                        <div class="tooltip">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-900 text-blue-200 mr-2 mb-2 badge">
+                                ${lang}: ${count}
+                            </span>
+                            <span class="tooltip-text">${count} snippets in ${lang}</span>
+                        </div>
+                    `)
+                    .join('');
+                
+                const reposHtml = Object.entries(stats.repositories)
+                    .map(([repo, count]) => `<li class="text-sm text-gray-400">${repo}: ${count} snippets</li>`)
+                    .join('');
+                
+                statsContainer.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-gray-700 p-4 rounded-md">
+                            <p class="text-sm font-medium text-gray-400">Total Code Snippets</p>
+                            <p class="text-3xl font-bold text-blue-300">${stats.num_documents}</p>
+                        </div>
+                        <div class="bg-gray-700 p-4 rounded-md">
+                            <p class="text-sm font-medium text-gray-400">Last Updated</p>
+                            <p class="text-sm text-gray-300">${new Date(stats.updated_at).toLocaleString()}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 bg-gray-700 p-4 rounded-md">
+                        <p class="text-sm font-medium text-gray-400 mb-2">Languages</p>
+                        <div class="flex flex-wrap">
+                            ${languagesHtml || '<p class="text-sm text-gray-400">No languages indexed</p>'}
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 bg-gray-700 p-4 rounded-md">
+                        <p class="text-sm font-medium text-gray-400 mb-2">Repositories</p>
+                        <ul class="list-disc list-inside">
+                            ${reposHtml || '<p class="text-sm text-gray-400">No repositories indexed</p>'}
+                        </ul>
+                    </div>
+                    
+                    <div class="mt-6 flex justify-end">
+                        <button id="clearIndexBtn" class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-red-400 bg-red-900 hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                            Clear Index
+                        </button>
+                    </div>
+                `;
+                
+                // Add event listener for clear index button
+                document.getElementById('clearIndexBtn').addEventListener('click', function() {
+                    if (confirm('Are you sure you want to clear the index? This action cannot be undone.')) {
+                        fetch('/clear-index', {
+                            method: 'POST'
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.error) {
+                                alert(data.error);
+                            } else {
+                                alert(data.message);
+                                loadStats();
+                            }
+                        })
+                        .catch(error => {
+                            alert('An error occurred while clearing the index: ' + error.message);
+                        });
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
+

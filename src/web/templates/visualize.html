@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Visualization - Semantic Code Search</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Code Visualization</h1>
+            <nav>
+                <ul>
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/search">Search</a></li>
+                    <li><a href="/analyze">Analyze</a></li>
+                    <li><a href="/visualize" class="active">Visualize</a></li>
+                    <li><a href="/manage">Manage</a></li>
+                </ul>
+            </nav>
+        </header>
+        
+        <main>
+            <section class="visualization-section">
+                <h2>Code Visualization</h2>
+                
+                <div class="form-group">
+                    <label for="index-select">Select Index:</label>
+                    <select id="index-select">
+                        <option value="">-- Select an index --</option>
+                        {% for index in indexes %}
+                        <option value="{{ index }}">{{ index }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="visualization-options">
+                    <h3>Visualization Type</h3>
+                    
+                    <div class="radio-group">
+                        <input type="radio" id="dependency-graph" name="visualization-type" value="dependency" checked>
+                        <label for="dependency-graph">Dependency Graph</label>
+                    </div>
+                    
+                    <div class="radio-group">
+                        <input type="radio" id="call-graph" name="visualization-type" value="call">
+                        <label for="call-graph">Call Graph</label>
+                    </div>
+                    
+                    <div class="radio-group">
+                        <input type="radio" id="class-hierarchy" name="visualization-type" value="class">
+                        <label for="class-hierarchy">Class Hierarchy</label>
+                    </div>
+                    
+                    <div class="radio-group">
+                        <input type="radio" id="module-graph" name="visualization-type" value="module">
+                        <label for="module-graph">Module Graph</label>
+                    </div>
+                    
+                    <div class="radio-group">
+                        <input type="radio" id="similarity-matrix" name="visualization-type" value="similarity">
+                        <label for="similarity-matrix">Similarity Matrix</label>
+                    </div>
+                    
+                    <div class="radio-group">
+                        <input type="radio" id="embeddings-visualization" name="visualization-type" value="embeddings">
+                        <label for="embeddings-visualization">Embeddings Visualization</label>
+                    </div>
+                    
+                    <div class="radio-group">
+                        <input type="radio" id="clusters-visualization" name="visualization-type" value="clusters">
+                        <label for="clusters-visualization">Clusters Visualization</label>
+                    </div>
+                </div>
+                
+                <div id="embeddings-options" class="visualization-options" style="display: none;">
+                    <h3>Embeddings Visualization Options</h3>
+                    
+                    <div class="radio-group">
+                        <input type="radio" id="tsne-method" name="embeddings-method" value="tsne" checked>
+                        <label for="tsne-method">t-SNE</label>
+                    </div>
+                    
+                    <div class="radio-group">
+                        <input type="radio" id="pca-method" name="embeddings-method" value="pca">
+                        <label for="pca-method">PCA</label>
+                    </div>
+                </div>
+                
+                <div id="clusters-options" class="visualization-options" style="display: none;">
+                    <h3>Clustering Options</h3>
+                    
+                    <div class="form-group">
+                        <label for="cluster-count">Number of Clusters:</label>
+                        <input type="number" id="cluster-count" value="5" min="2" max="20">
+                    </div>
+                </div>
+                
+                <button id="visualize-button" class="primary-button">Generate Visualization</button>
+                
+                <div id="visualization-results" class="results-container">
+                    <div id="visualization-container" class="visualization-container"></div>
+                    <div id="visualization-info" class="visualization-info"></div>
+                </div>
+            </section>
+            
+            <section class="similarity-search-section">
+                <h2>Code Similarity Search</h2>
+                
+                <div class="form-group">
+                    <label for="similarity-index-select">Select Index:</label>
+                    <select id="similarity-index-select">
+                        <option value="">-- Select an index --</option>
+                        {% for index in indexes %}
+                        <option value="{{ index }}">{{ index }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="similarity-code-input">Enter Python code to find similar code:</label>
+                    <textarea id="similarity-code-input" rows="10" placeholder="# Enter your Python code here..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="similarity-threshold">Similarity Threshold:</label>
+                    <input type="range" id="similarity-threshold" min="0" max="100" value="70">
+                    <span id="similarity-threshold-value">70%</span>
+                </div>
+                
+                <div class="form-group">
+                    <label for="similarity-top-k">Number of Results:</label>
+                    <input type="number" id="similarity-top-k" value="10" min="1" max="100">
+                </div>
+                
+                <button id="similarity-search-button" class="primary-button">Find Similar Code</button>
+                
+                <div id="similarity-results" class="results-container">
+                    <h3>Similar Code</h3>
+                    <div id="similar-code-container" class="similar-code-container"></div>
+                </div>
+            </section>
+        </main>
+        
+        <footer>
+            <p>&copy; 2023 Semantic Code Search Engine</p>
+        </footer>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Show/hide options based on visualization type
+            document.querySelectorAll('input[name="visualization-type"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    const visualizationType = this.value;
+                    
+                    // Hide all options
+                    document.getElementById('embeddings-options').style.display = 'none';
+                    document.getElementById('clusters-options').style.display = 'none';
+                    
+                    // Show options based on visualization type
+                    if (visualizationType === 'embeddings') {
+                        document.getElementById('embeddings-options').style.display = 'block';
+                    } else if (visualizationType === 'clusters') {
+                        document.getElementById('clusters-options').style.display = 'block';
+                    }
+                });
+            });
+            
+            // Update similarity threshold value
+            document.getElementById('similarity-threshold').addEventListener('input', function() {
+                document.getElementById('similarity-threshold-value').textContent = `${this.value}%`;
+            });
+            
+            // Generate visualization button
+            document.getElementById('visualize-button').addEventListener('click', async function() {
+                const indexName = document.getElementById('index-select').value;
+                const visualizationType = document.querySelector('input[name="visualization-type"]:checked').value;
+                
+                if (!indexName) {
+                    alert('Please select an index');
+                    return;
+                }
+                
+                // Get additional options based on visualization type
+                let options = {};
+                
+                if (visualizationType === 'embeddings') {
+                    options.method = document.querySelector('input[name="embeddings-method"]:checked').value;
+                } else if (visualizationType === 'clusters') {
+                    options.n_clusters = parseInt(document.getElementById('cluster-count').value);
+                }
+                
+                try {
+                    const response = await fetch('/api/visualize', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            index_name: indexName,
+                            visualization_type: visualizationType,
+                            options
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        displayVisualization(data);
+                    } else {
+                        alert(`Error: ${data.error}`);
+                    }
+                } catch (error) {
+                    alert(`Error: ${error.message}`);
+                }
+            });
+            
+            // Similarity search button
+            document.getElementById('similarity-search-button').addEventListener('click', async function() {
+                const indexName = document.getElementById('similarity-index-select').value;
+                const code = document.getElementById('similarity-code-input').value;
+                const threshold = parseInt(document.getElementById('similarity-threshold').value) / 100;
+                const topK = parseInt(document.getElementById('similarity-top-k').value);
+                
+                if (!indexName) {
+                    alert('Please select an index');
+                    return;
+                }
+                
+                if (!code) {
+                    alert('Please enter some code to find similar code');
+                    return;
+                }
+                
+                try {
+                    const response = await fetch('/api/find_similar_code', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            index_name: indexName,
+                            code,
+                            threshold,
+                            top_k: topK
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        displaySimilarCode(data);
+                    } else {
+                        alert(`Error: ${data.error}`);
+                    }
+                } catch (error) {
+                    alert(`Error: ${error.message}`);
+                }
+            });
+            
+            // Function to display visualization
+            function displayVisualization(data) {
+                const visualizationContainer = document.getElementById('visualization-container');
+                const visualizationInfo = document.getElementById('visualization-info');
+                
+                // Clear previous visualization
+                visualizationContainer.innerHTML = '';
+                visualizationInfo.innerHTML = '';
+                
+                if (data.image) {
+                    // Create image element
+                    const img = document.createElement('img');
+                    img.src = data.image;
+                    img.alt = 'Code Visualization';
+                    img.className = 'visualization-image';
+                    
+                    visualizationContainer.appendChild(img);
+                    
+                    // Add visualization info
+                    if (data.node_count !== undefined && data.edge_count !== undefined) {
+                        const infoText = document.createElement('p');
+                        infoText.textContent = `Nodes: ${data.node_count}, Edges: ${data.edge_count}`;
+                        visualizationInfo.appendChild(infoText);
+                    }
+                    
+                    // Show the results container
+                    document.getElementById('visualization-results').style.display = 'block';
+                } else if (data.error) {
+                    visualizationContainer.innerHTML = `<p class="error">Error: ${data.error}</p>`;
+                    document.getElementById('visualization-results').style.display = 'block';
+                }
+            }
+            
+            // Function to display similar code
+            function displaySimilarCode(data) {
+                const similarCodeContainer = document.getElementById('similar-code-container');
+                
+                // Clear previous results
+                similarCodeContainer.innerHTML = '';
+                
+                if (data.similar_code && data.similar_code.length > 0) {
+                    // Create results list
+                    const resultsList = document.createElement('div');
+                    resultsList.className = 'similar-code-list';
+                    
+                    for (const result of data.similar_code) {
+                        const resultItem = document.createElement('div');
+                        resultItem.className = 'similar-code-item';
+                        
+                        // Create header with name and similarity score
+                        const header = document.createElement('div');
+                        header.className = 'similar-code-header';
+                        
+                        const nameSpan = document.createElement('span');
+                        nameSpan.className = 'similar-code-name';
+                        nameSpan.textContent = result.name;
+                        
+                        const scoreSpan = document.createElement('span');
+                        scoreSpan.className = 'similar-code-score';
+                        scoreSpan.textContent = `${Math.round(result.similarity * 100)}% similar`;
+                        
+                        header.appendChild(nameSpan);
+                        header.appendChild(scoreSpan);
+                        
+                        // Create code block
+                        const codeBlock = document.createElement('pre');
+                        codeBlock.className = 'similar-code-block';
+                        codeBlock.textContent = result.code;
+                        
+                        // Create file info
+                        const fileInfo = document.createElement('div');
+                        fileInfo.className = 'similar-code-file';
+                        fileInfo.textContent = `File: ${result.file_path}, Line: ${result.line_number}`;
+                        
+                        // Add elements to result item
+                        resultItem.appendChild(header);
+                        resultItem.appendChild(codeBlock);
+                        resultItem.appendChild(fileInfo);
+                        
+                        resultsList.appendChild(resultItem);
+                    }
+                    
+                    similarCodeContainer.appendChild(resultsList);
+                } else {
+                    similarCodeContainer.innerHTML = '<p>No similar code found.</p>';
+                }
+                
+                // Show the results container
+                document.getElementById('similarity-results').style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
+
